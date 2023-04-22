@@ -25,7 +25,8 @@ const validationSchemaSignUp = yup.object({
     .matches(EMAIL_REGEX, "Sorry, the email address is not valid."),
   password: yup
     .string()
-    .required("Please enter your password"),
+    .required("Please enter your password")
+    .min(6, "Password must be at least 6 characters."),
   confirmPassword: yup
   .string()
   .required("Please confirm your password")
@@ -46,12 +47,13 @@ const validationSchemaLogin = yup.object({
 export default function Login() {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [successLogin, setSuccessLogin] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const validationSchema = isSignUp ? validationSchemaSignUp : validationSchemaLogin;
 
   const handleLogin = (values, { setSubmitting }) => {
-    console.log("Login under handling");
+    setSuccessLogin(true);
     if (!isSignUp) {
       signInWithEmailAndPassword(auth, values.email, values.password)
         .then((_) => {
@@ -60,6 +62,7 @@ export default function Login() {
         .catch((_) => {
           setErrorMessage("Invalid email or password. Please try again.")
           setSubmitting(false);
+          setSuccessLogin(false);
         });
     } else {
       createUserWithEmailAndPassword(auth, values.email, values.password)
@@ -69,13 +72,14 @@ export default function Login() {
         .catch((_) => {
           setErrorMessage("Email is already in use.")
           setSubmitting(false);
+          setSuccessLogin(false);
         });
     }
   }
   
   return (
     <div className={styles.login}>
-      <h1>{isSignUp ? "Create Account" : "Login"}</h1>
+      <h1>{successLogin ? "YES CHEF" : (isSignUp ? "Create Account" : "Login")}</h1>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
