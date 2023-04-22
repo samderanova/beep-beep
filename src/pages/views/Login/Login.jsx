@@ -14,7 +14,6 @@ export default function Login() {
 
     function handleLogin(e) {
         e.preventDefault();
-        console.log(isSignUp);
         if (!isSignUp) {
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
@@ -27,7 +26,6 @@ export default function Login() {
 				});
         } else {
             if (password === confirmPassword) {
-                console.log(auth.config);
                 createUserWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
