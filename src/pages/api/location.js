@@ -38,7 +38,6 @@ async function yelpRequestCoordinates(
     limit: limit,
     categories: categories.join(","),
   });
-  console.log(params.toString());
   const response = await fetch(
     `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
     {
@@ -55,15 +54,17 @@ async function yelpRequestCoordinates(
 
 function filterKeys(obj) {
   const data = obj.businesses;
-  let filteredData = [];
+  const filteredData = [];
 
   for (let i = 0; i < data.length; i++) {
     const filteredObj = {
       id: data[i].id,
       name: data[i].name,
       coordinates: data[i].coordinates,
-      categories: data[i].categories,
-      phone: data[i].phone,
+      location:
+        data[i].location.display_address[0] +
+        ", " +
+        data[i].location.display_address[1],
     };
     filteredData.push(filteredObj);
   }
