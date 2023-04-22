@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { Formik } from "formik";
+import { Formik, Field } from "formik";
 import * as yup from "yup";
 import { auth } from "@/lib/firebase";
 import styles from "./Login.module.scss";
@@ -18,63 +18,61 @@ const initialValues = {
   confirmPassword: "",
 }
 
-const validationSchema = yup.object({
+const validationSchemaSignUp = yup.object({
   email: yup
     .string()
     .required("Please enter your email")
     .matches(EMAIL_REGEX, "Sorry, the email address is not valid."),
   password: yup
     .string()
-    .required("Please enter a password"),
+    .required("Please enter your password"),
   confirmPassword: yup
+  .string()
+  .required("Please confirm your password")
+  .oneOf([yup.ref("password")], "Sorry, passwords do not match.")
+});
+
+const validationSchemaLogin = yup.object({
+  email: yup
     .string()
-    .oneOf([yup.ref("password")])
+    .required("Please enter your email")
+    .matches(EMAIL_REGEX, "Sorry, the email address is not valid."),
+  password: yup
+    .string()
+    .required("Please enter your password"),
+  confirmPassword: yup.string().notRequired()
 });
 
 export default function Login() {
   const router = useRouter();
-  // const [isSignUp, setIsSignUp] = useState(false);
-  // const [email, setEmail] = useState("");
-  // const [password, setPassword] = useState("");
-  // const [confirmPassword, setConfirmPassword] = useState("");
-  // const [errorMessage, setErrorMessage] = useState("");
-  // const [isValid, setIsValid] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function handleLogin(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    if (form.checkValidity() === false || password !== confirmPassword) {
-      setIsValid(false);
+  const validationSchema = isSignUp ? validationSchemaSignUp : validationSchemaLogin;
+
+  const handleLogin = (values, { setSubmitting }) => {
+    console.log("Login under handling");
+    if (!isSignUp) {
+      signInWithEmailAndPassword(auth, values.email, values.password)
+        .then((_) => {
+          router.push("/search");
+        })
+        .catch((_) => {
+          setErrorMessage("Invalid email or password. Please try again.")
+          setSubmitting(false);
+        });
     } else {
-      if (!isSignUp) {
-        signInWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-            router.push("/search");
-          })
-          .catch((err) => {
-            const errorCode = err.code;
-            const errorMessage = err.message;
-            setIsValid(false);
-          });
-      } else {
-        if (password === confirmPassword) {
-          createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-              router.push("/search");
-            })
-            .catch((err) => {
-              const errorCode = err.code;
-              const errorMessage = err.message;
-              console.log(errorMessage);
-            });
-        } else {
-          setIsValid(false);
-          //setErrorMessage("Passwords do not match.");
-        }
-      }
+      createUserWithEmailAndPassword(auth, values.email, values.password)
+        .then((_) => {
+          router.push("/search");
+        })
+        .catch((_) => {
+          setErrorMessage("Email is already in use.")
+          setSubmitting(false);
+        });
     }
   }
-
+  
   return (
     <div className={styles.login}>
       <h1>{isSignUp ? "Create Account" : "Login"}</h1>
@@ -84,70 +82,82 @@ export default function Login() {
         onSubmit={handleLogin}
       >
         {({
-          values,
           touched,
           errors,
-          setFieldValue,
+          isSubmitting,
           handleSubmit,
+          setValues,
+          setTouched
         }) => (
-          <Form noValidate validated={!isValid} className={styles.form} onSubmit={handleLogin}>
-            {isValid ? null : <Alert variant="danger">Error: Please enter valid username and password.</Alert>}
-        
+          <Form className={styles.form} onSubmit={handleSubmit}>
+            {errorMessage === "" ? null : <Alert variant="danger">{errorMessage}</Alert>}
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
-              <Form.Control
+              <Field
+                name="email"
+                placeholder="Email"
+                as={Form.Control}
                 type="email"
-                value={values.email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                isValid={touched.email && !errors.email}
+                isInvalid={touched.email && errors.email}
               />
               <Form.Control.Feedback type="invalid">
-                  Please enter an email.
-                </Form.Control.Feedback>
+                {errors.email}
+              </Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-3" controlId="password">
               <Form.Label>Password</Form.Label>
-              <Form.Control
+              <Field
+                name="password"
+                placeholder="Password"
+                as={Form.Control}
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                isValid={touched.password && !errors.password}
+                isInvalid={touched.password && errors.password}
               />
               <Form.Control.Feedback type="invalid">
-                  Please enter a password.
-                </Form.Control.Feedback>
+                {errors.password}
+              </Form.Control.Feedback>
             </Form.Group>
             {isSignUp ? (
               <Form.Group className="mb-3" controlId="confirmPassword">
                 <Form.Label>Confirm Password</Form.Label>
-                <Form.Control
+                <Field
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  as={Form.Control}
                   type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  isValid={touched.confirmPassword && !errors.confirmPassword}
+                  isInvalid={touched.confirmPassword && errors.confirmPassword}
                 />
                 <Form.Control.Feedback type="invalid">
-                  Please re-enter password.
+                  {errors.confirmPassword}
                 </Form.Control.Feedback>
               </Form.Group>
             ) : null}
-            <Form.Control.Feedback type="invalid">
-                Password not found.
-              </Form.Control.Feedback>
             <Form.Group className="mb-3">
               <Button
                 className="p-0 border-0"
                 variant="none"
-                onClick={(_) => setIsSignUp(!isSignUp)}
+                onClick={(_) => {
+                  setIsSignUp(!isSignUp); 
+                  setErrorMessage(""); 
+                  setValues(initialValues);
+                  setTouched({
+                    email: false,
+                    password: false,
+                    confirmPassword: false,
+                  })
+                }}
               >
                 <Form.Text>{!isSignUp ? "Create Account" : "Login"}</Form.Text>
               </Button>
             </Form.Group>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               {isSignUp ? "Create Account" : "Login"}
             </Button>
           </Form>
         )}
-      
       </Formik>
     </div>
   );
