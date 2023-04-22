@@ -1,1 +1,1 @@
-export { Landing as default } from "./views";
+export { Login as default } from "./views";
