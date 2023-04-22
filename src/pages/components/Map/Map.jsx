@@ -53,7 +53,9 @@ function AddMarkerToClick({ setHideModal, setResults }) {
   return (
     <>
       <Marker position={marker}>
-        <Popup>Marker is at {marker}</Popup>
+        <Popup>
+          ({marker.lat.toFixed(2)}, {marker.lng.toFixed(2)})
+        </Popup>
       </Marker>
     </>
   );
