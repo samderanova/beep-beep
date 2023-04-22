@@ -96,9 +96,6 @@ export default function Map() {
               <strong>Results</strong>
             </h1>
           </Col>
-          <Col className="text-end">
-            <Button variant="success">Add All</Button>
-          </Col>
         </Row>
         {results.map((result, index) => (
           <Result key={index} count={index + 1} result={result} />

@@ -65,6 +65,7 @@ function filterKeys(obj) {
         data[i].location.display_address[0] +
         ", " +
         data[i].location.display_address[1],
+      url: data[i].url,
     };
     filteredData.push(filteredObj);
   }

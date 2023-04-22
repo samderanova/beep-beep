@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import styles from "./Login.module.scss";
 
 export default function Login() {
@@ -30,6 +31,11 @@ export default function Login() {
       if (password === confirmPassword) {
         createUserWithEmailAndPassword(auth, email, password)
           .then((userCredential) => {
+            const user = userCredential.user;
+            setDoc(doc(db, "users", user.uid), {
+              scheduled: [],
+              unscheduled: [],
+            });
             router.push("/search");
           })
           .catch((err) => {
