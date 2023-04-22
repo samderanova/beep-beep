@@ -1,6 +1,17 @@
-async function yelpRequestLocation(location) {
+async function yelpRequestLocation(
+  location,
+  page = 1,
+  limit = 10,
+  categories = []
+) {
+  const params = new URLSearchParams({
+    location: location,
+    offset: (page - 1) * limit,
+    limit: limit,
+    categories: categories.join(","),
+  });
   const response = await fetch(
-    `https://api.yelp.com/v3/businesses/search?location=${location}`,
+    `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${process.env.YELP_API_KEY}`,
@@ -13,9 +24,23 @@ async function yelpRequestLocation(location) {
   return filterKeys(data);
 }
 
-async function yelpRequestCoordinates(latitude, longitude) {
+async function yelpRequestCoordinates(
+  latitude,
+  longitude,
+  page = 1,
+  limit = 10,
+  categories = []
+) {
+  const params = new URLSearchParams({
+    latitude: latitude,
+    longitude: longitude,
+    offset: (page - 1) * limit,
+    limit: limit,
+    categories: categories.join(","),
+  });
+  console.log(params.toString());
   const response = await fetch(
-    `https://api.yelp.com/v3/businesses/search?latitude=${latitude}&longitude=${longitude}`,
+    `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${process.env.YELP_API_KEY}`,
@@ -37,6 +62,7 @@ function filterKeys(obj) {
       id: data[i].id,
       name: data[i].name,
       coordinates: data[i].coordinates,
+      categories: data[i].categories,
       phone: data[i].phone,
     };
     filteredData.push(filteredObj);
@@ -48,7 +74,12 @@ function filterKeys(obj) {
 export default async function handler(req, res) {
   if (req.method === "GET") {
     if (req.query.location) {
-      const data = await yelpRequestLocation(req.query.location);
+      const data = await yelpRequestLocation(
+        req.query.location,
+        req.query.page,
+        req.query.limit,
+        req.query.categories
+      );
       res.status(200).json(data);
     } else if (
       parseFloat(req.query.longitude) &&
@@ -56,7 +87,10 @@ export default async function handler(req, res) {
     ) {
       const data = await yelpRequestCoordinates(
         req.query.latitude,
-        req.query.longitude
+        req.query.longitude,
+        req.query.page,
+        req.query.limit,
+        req.query.categories
       );
       res.status(200).json(data);
     } else {
