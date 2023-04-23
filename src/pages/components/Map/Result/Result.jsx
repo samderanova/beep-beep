@@ -1,17 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Row, Col, Button, Toast } from "react-bootstrap";
+import { Row, Col, Button } from "react-bootstrap";
 import Plus from "@/assets/icons/plus-lg.svg";
 import Minus from "@/assets/icons/dash-lg.svg";
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import styles from "./Result.module.scss";
 
-export default function Result({ count, result }) {
+export default function Result({ count, result, notify, setToastContent }) {
   const [added, setAdded] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastContent, setToastContent] = useState("");
 
   useEffect(() => {
     const determineAdded = async () => {
@@ -44,17 +42,17 @@ export default function Result({ count, result }) {
           unscheduled: data,
         });
       }
-      setToastContent("Successfully removed location!");
+      setToastContent("Successfully added location!");
     } else {
       const data = docSnap.data().unscheduled;
       data.push(result.id);
       await updateDoc(userRef, {
         unscheduled: data,
       });
-      setToastContent("Successfully added location!");
+      setToastContent("Successfully removed location!");
     }
-    setShowToast(true);
     setAdded(!added);
+    notify();
   }
 
   return (
@@ -81,18 +79,6 @@ export default function Result({ count, result }) {
           )}
         </Button>
       </Col>
-      <Toast
-        bg="success"
-        onClose={() => setShowToast(false)}
-        show={showToast}
-        delay={10000}
-        autohide
-      >
-        <Toast.Header>{toastContent}</Toast.Header>
-        <Toast.Body>
-          View your updated schedule <Link to="/schedule">here</Link>.
-        </Toast.Body>
-      </Toast>
     </Row>
   );
 }

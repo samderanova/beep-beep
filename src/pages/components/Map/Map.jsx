@@ -1,6 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   MapContainer,
   TileLayer,
@@ -9,6 +12,7 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
@@ -24,7 +28,7 @@ function CenterAtUserLocation() {
 }
 
 function AddMarkerToClick({ setHideModal, setResults }) {
-  const [marker, setMarker] = useState([0, 0]);
+  const [marker, setMarker] = useState({ lat: 0, lng: 0 });
 
   const map = useMapEvents({
     async click(e) {
@@ -50,6 +54,10 @@ function AddMarkerToClick({ setHideModal, setResults }) {
     });
   }, []);
 
+  useEffect(() => {
+    map.setView([marker.lat, marker.lng]);
+  }, [marker]);
+
   return (
     <>
       <Marker position={marker}>
@@ -62,54 +70,104 @@ function AddMarkerToClick({ setHideModal, setResults }) {
 }
 
 export default function Map() {
+  const [gotLocation, setGotLocation] = useState(false);
   const [hideModal, setHideModal] = useState(true);
-  const [center, setCenter] = useState([0, 0]);
+  const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [results, setResults] = useState([]);
+  const [toastContent, setToastContent] = useState("");
+  const notify = () =>
+    toast(
+      <>
+        {toastContent} View your schedule <Link href="/schedule">here</Link>.
+      </>
+    );
+
+  const LeafIcon = L.Icon.extend({ options: {} });
+  const greenIcon = new LeafIcon({
+    iconUrl:
+      "https://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|2ecc71&chf=a,s,ee00FFFF",
+  });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
-      setCenter(position.coords.latitude, position.coords.longitude);
+      setCenter({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
+      setGotLocation(true);
     });
   }, []);
 
   return (
-    <>
-      <MapContainer center={center} zoom={12} style={{ height: "100vh" }}>
-        <TileLayer
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <AddMarkerToClick setHideModal={setHideModal} setResults={setResults} />
-      </MapContainer>
-      <div className={styles.search}>
-        <Form.Control
-          type="search"
-          placeholder="Search..."
-          style={{ borderRadius: "3px", boxShadow: "0px 3px 3px gray" }}
-        />
-      </div>
-      <div
-        className={styles.results + " p-5"}
-        style={hideModal ? { display: "none" } : null}
-      >
-        <Row>
-          <Col>
-            <h1>
-              <strong>Results</strong>
-            </h1>
-          </Col>
-        </Row>
-        {results.map((result, index) => (
-          <Result key={index} count={index + 1} result={result} />
-        ))}
-        <Button variant="none" onClick={(_) => setHideModal(true)}>
-          <Image
-            src={exitX}
-            alt="hide results modal"
-            style={{ position: "absolute", top: 15, right: 15 }}
+    gotLocation && (
+      <>
+        <MapContainer center={center} zoom={12} style={{ height: "100vh" }}>
+          <TileLayer
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-        </Button>
-      </div>
-    </>
+          <AddMarkerToClick
+            setHideModal={setHideModal}
+            setResults={setResults}
+          />
+          {results.map((result, index) => (
+            <Marker
+              key={index}
+              icon={greenIcon}
+              position={{
+                lat: result.coordinates.latitude,
+                lng: result.coordinates.longitude,
+              }}
+            >
+              <Popup>
+                <Link href={result.url} style={{ fontSize: "15px" }}>
+                  {result.name}
+                </Link>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+        <div className={styles.search}>
+          <Form.Control
+            type="search"
+            placeholder="Search..."
+            style={{
+              borderRadius: "5px",
+              boxShadow: "0px 3px 3px gray",
+              minWidth: "500px",
+            }}
+          />
+        </div>
+        <div
+          className={styles.results + " p-5"}
+          style={hideModal ? { display: "none" } : null}
+        >
+          <Row>
+            <Col>
+              <h1>
+                <strong>Results</strong>
+              </h1>
+            </Col>
+          </Row>
+          {results.map((result, index) => (
+            <Result
+              key={index}
+              count={index + 1}
+              result={result}
+              notify={notify}
+              setToastContent={setToastContent}
+            />
+          ))}
+          <Button variant="none" onClick={(_) => setHideModal(true)}>
+            <Image
+              src={exitX}
+              alt="hide results modal"
+              style={{ position: "absolute", top: 15, right: 15 }}
+            />
+          </Button>
+        </div>
+        <ToastContainer position="bottom-left" />
+      </>
+    )
   );
 }
