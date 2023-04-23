@@ -24,6 +24,7 @@ export default function Schedule() {
 
     if (eventSelected !== "") {
       const newEvent = {
+        id: eventSelected,
         title: eventSelected,
         start: new Date(selectInfo.startStr),
         end: new Date(selectInfo.endStr)
@@ -33,15 +34,16 @@ export default function Schedule() {
         setScheduled([...scheduled, newEvent]);
         setUnscheduled(unscheduled.filter(unscheduledEvent => unscheduledEvent !== eventSelected));
         setEventSelected("");
+        console.log(newEvent);
       }
     }
   }
 
   const handleEventClick = (clickInfo) => {
     if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
-      const removedEvent = clickInfo.event.title;
       clickInfo.event.remove();
-      setScheduled(scheduled.filter(scheduledEvent => scheduledEvent.title !== eventSelected));
+      const removedEvent = clickInfo.event.title;
+      setScheduled(scheduled.filter(scheduledEvent => scheduledEvent.id !== eventSelected));
       setUnscheduled([...unscheduled, removedEvent]);
       setEventSelected("");
     }
@@ -66,15 +68,23 @@ export default function Schedule() {
     const events = [];
     for (let i = 0; i < scheduled.length; i++) {
       const event = {
+        id: scheduled[i].id,
         title: scheduled[i].id,
         start: new Date(scheduled[i].start),
         end: new Date(scheduled[i].end),
       };
+      console.log(event);
       events.push(event);
     }
     console.log(scheduled);
     return events;
   };
+
+  const setEvents = (events) => {
+    console.log("setEvents run");
+    setScheduled(events);
+    console.log(scheduled);
+  }
 
   return (
     <Container fluid className={styles.calendar + " p-5"}>
@@ -92,9 +102,10 @@ export default function Schedule() {
             selectable={true}
             selectMirror={true}
             dayMaxEvents={true}
-            events={createEvents()}
+            initialEvents={createEvents()}
             select={handleDateSelect}
             eventClick={handleEventClick}
+            eventsSet={setEvents}
           />
         </Col>
         <Col>
