@@ -10,31 +10,30 @@ import interactionPlugin from "@fullcalendar/interaction";
 import styles from "./Schedule.module.scss";
 
 export default function Schedule() {
-  const [eventId, setEventId] = useState(0);
   const [eventSelected, setEventSelected] = useState("");
   const [scheduled, setScheduled] = useState([]);
+  const [unscheduled, setUnscheduled] = useState([]);
   const auth = getAuth();
 
-  // Example events for use
-  const [events, setEvents] = useState(["SunTime", "MonDane", "TwosPlay", "Weddding", "Thurty-firth Bday", "Free Day", "Sat at Home"]);
-
   const handleDateSelect = (selectInfo) => {
+    console.log("handleDateSelect ran");
     // let title = prompt('Please enter a new title for your event')
     let calendarApi = selectInfo.view.calendar
 
     calendarApi.unselect() // clear date selection
 
     if (eventSelected !== "") {
-      calendarApi.addEvent({
-        id: eventId,
+      const newEvent = {
         title: eventSelected,
-        start: selectInfo.startStr,
-        end: selectInfo.endStr,
-        allDay: selectInfo.allDay
-      })
-      setEventId(eventId+1);
-      setEvents(events.filter(event => event !== eventSelected));
-      setEventSelected("");
+        start: new Date(selectInfo.startStr),
+        end: new Date(selectInfo.endStr)
+      }
+      if (!scheduled.includes(newEvent)) {
+        calendarApi.addEvent(newEvent);
+        setScheduled([...scheduled, newEvent]);
+        setUnscheduled(unscheduled.filter(unscheduledEvent => unscheduledEvent !== eventSelected));
+        setEventSelected("");
+      }
     }
   }
 
@@ -42,7 +41,8 @@ export default function Schedule() {
     if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
       const removedEvent = clickInfo.event.title;
       clickInfo.event.remove();
-      setEvents([...events, removedEvent]);
+      setScheduled(scheduled.filter(scheduledEvent => scheduledEvent.title !== eventSelected));
+      setUnscheduled([...unscheduled, removedEvent]);
       setEventSelected("");
     }
   }
@@ -54,6 +54,7 @@ export default function Schedule() {
         const userRef = doc(db, "users", uid);
         const docSnap = await getDoc(userRef);
         setScheduled(docSnap.data().scheduled);
+        setUnscheduled(docSnap.data().unscheduled);
       } else {
         console.log("Ooga booga i am not logged in");
       }
@@ -61,6 +62,7 @@ export default function Schedule() {
   }, []);
 
   const createEvents = () => {
+    console.log("createEvents ran");
     const events = [];
     for (let i = 0; i < scheduled.length; i++) {
       const event = {
@@ -70,6 +72,7 @@ export default function Schedule() {
       };
       events.push(event);
     }
+    console.log(scheduled);
     return events;
   };
 
@@ -96,14 +99,14 @@ export default function Schedule() {
         </Col>
         <Col>
           <h1>Schedule</h1>
-          {events.map((event) => 
+          {unscheduled.map((unselectedEvent) => 
             <Card 
-              key={event} 
+              key={unselectedEvent} 
               style={{
-                backgroundColor: event === eventSelected ? 'lightblue' : '',
+                backgroundColor: unselectedEvent === eventSelected ? 'lightblue' : '',
               }}
-              onClick={() => setEventSelected( eventSelected === event ? "" : event)}
-            >{event}</Card>
+              onClick={() => setEventSelected( eventSelected === unselectedEvent ? "" : unselectedEvent)}
+            >{unselectedEvent}</Card>
           )}
         </Col>
       </Row>
