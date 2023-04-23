@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Button, Form, Alert } from "react-bootstrap";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  onAuthStateChanged
 } from "firebase/auth";
 import { Formik, Field } from "formik";
 import * as yup from "yup";
@@ -76,6 +77,20 @@ export default function Login() {
         });
     }
   }
+
+  useEffect(() => {
+    console.log("useEffect login ran");
+    const user = auth.user;
+    // console.log(user);    
+    onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // console.log(user.email); 
+      router.push("/search");
+    } else {
+      // console.log("Log me in please")
+    }
+    })
+  }, [])
   
   return (
     <div className={styles.login}>
