@@ -30,19 +30,15 @@ export default function Result({ count, result, notify, setToastContent }) {
     let newData;
     if (added) {
       if (data.scheduled.includes(result.id)) {
-        newData = data.scheduled.filter(
-          (_, index) => index != data.scheduled.indexOf(result.id)
-        );
+        newData = data.scheduled.filter((elem) => elem !== result.id);
         await updateDoc(userRef, { scheduled: newData });
       } else {
-        newData = data.unscheduled.filter(
-          (_, index) => index != data.unscheduled.indexOf(result.id)
-        );
+        newData = data.unscheduled.filter((elem) => elem.id !== result.id);
         await updateDoc(userRef, { unscheduled: newData });
       }
     } else {
       newData = data.unscheduled;
-      newData.push(result.id);
+      newData.push({ id: result.id, name: result.name });
       await updateDoc(userRef, { unscheduled: newData });
     }
 
