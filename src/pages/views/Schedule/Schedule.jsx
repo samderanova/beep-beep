@@ -87,23 +87,23 @@ export default function Schedule() {
     });
   }, []);
 
-  const createEvents = () => {
-    console.log("createEvents ran");
-    const events = [];
-    for (let i = 0; i < scheduled.length; i++) {
-      console.log(scheduled[i]);
-      const event = {
-        id: scheduled[i].id,
-        title: scheduled[i].name,
-        start: new Date(scheduled[i].start),
-        end: new Date(scheduled[i].end),
-      };
-      console.log(event);
-      events.push(event);
-    }
-    console.log(events);
-    return events;
-  };
+  // const createEvents = () => {
+  //   console.log("createEvents ran");
+  //   const events = [];
+  //   for (let i = 0; i < scheduled.length; i++) {
+  //     console.log(scheduled[i]);
+  //     const event = {
+  //       id: scheduled[i].id,
+  //       title: scheduled[i].name,
+  //       start: new Date(scheduled[i].start),
+  //       end: new Date(scheduled[i].end),
+  //     };
+  //     console.log(event);
+  //     events.push(event);
+  //   }
+  //   console.log(events);
+  //   return events;
+  // };
 
   const setEvents = (events) => {
     console.log("setEvents run");
@@ -131,6 +131,7 @@ export default function Schedule() {
       cards.push(
         <Card
           key={unscheduled[i].id}
+          className={styles.card}
           style={{
             backgroundColor:
               unscheduled[i].id === eventSelected.id ? "lightblue" : "",
@@ -177,8 +178,10 @@ export default function Schedule() {
           </Button>
         </Col>
         <Col>
-          <h1>Schedule</h1>
-          {genCards()}
+          <div className={styles.cards}>
+            <h1>Save</h1>
+            {genCards()}
+          </div>
         </Col>
       </Row>
     </Container>
