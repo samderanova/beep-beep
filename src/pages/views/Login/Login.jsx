@@ -5,9 +5,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { Formik, Field } from "formik";
 import * as yup from "yup";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import styles from "./Login.module.scss";
 
 const EMAIL_REGEX = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
@@ -67,6 +68,8 @@ export default function Login() {
     } else {
       createUserWithEmailAndPassword(auth, values.email, values.password)
         .then((_) => {
+          const dbRef = doc(db, "users", auth.currentUser.uid);
+          setDoc(dbRef, { unscheduled: [], scheduled: [] });
           router.push("/search");
         })
         .catch((_) => {
