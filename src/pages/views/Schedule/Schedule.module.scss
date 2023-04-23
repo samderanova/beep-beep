@@ -3,4 +3,15 @@
     text-decoration: none;
     color: black;
   }
+
+  .logout {
+    min-height: 4vh;
+    justify-self: center;
+
+    .button {
+      background-color: lightcoral;
+      max-width: 10vw;
+      border-color: transparent;
+    }
+  }
 }

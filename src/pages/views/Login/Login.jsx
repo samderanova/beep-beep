@@ -79,17 +79,10 @@ export default function Login() {
   }
 
   useEffect(() => {
-    console.log("useEffect login ran");
-    const user = auth.user;
-    // console.log(user);    
     onAuthStateChanged(auth, (user) => {
     if (user) {
-      // console.log(user.email); 
       router.push("/search");
-    } else {
-      // console.log("Log me in please")
-    }
-    })
+    }})
   }, [])
   
   return (
