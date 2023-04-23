@@ -9,6 +9,7 @@ async function yelpRequestLocation(
     offset: (page - 1) * limit,
     limit: limit,
     categories: categories.join(","),
+    radius: 10000,
   });
   const response = await fetch(
     `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
@@ -25,8 +26,8 @@ async function yelpRequestLocation(
 }
 
 async function yelpRequestCoordinates(
-  latitude,
-  longitude,
+  latitude = 0,
+  longitude = 0,
   page = 1,
   limit = 10,
   categories = []
@@ -37,6 +38,7 @@ async function yelpRequestCoordinates(
     offset: (page - 1) * limit,
     limit: limit,
     categories: categories.join(","),
+    radius: 10000,
   });
   const response = await fetch(
     `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
@@ -84,8 +86,8 @@ export default async function handler(req, res) {
       );
       res.status(200).json(data);
     } else if (
-      parseFloat(req.query.longitude) &&
-      parseFloat(req.query.latitude)
+      parseFloat(req.query.longitude) !== null &&
+      parseFloat(req.query.latitude) !== null
     ) {
       const data = await yelpRequestCoordinates(
         req.query.latitude,

@@ -17,8 +17,28 @@
   width: 35vw;
   height: 90vh;
   overflow-y: scroll;
+  min-height: 80vh;
 
   h1 {
     font-size: 30px;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  margin-top: 30px;
+
+  button:hover {
+    background-color: #eee;
+    transition: background-color 0.1s ease;
+  }
+
+  button:disabled {
+    background-color: #d3d3d3;
+    border-width: 0;
+    opacity: 0.3;
+    transition: 0 !important;
   }
 }

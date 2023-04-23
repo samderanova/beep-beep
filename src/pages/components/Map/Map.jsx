@@ -17,32 +17,26 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import exitX from "@/assets/icons/x-lg.svg";
+import Left from "@/assets/icons/left-chevron-svgrepo-com.svg";
+import Right from "@/assets/icons/right-chevron-svgrepo-com.svg";
 import Result from "./Result/Result";
 import styles from "./Map.module.scss";
 
-function CenterAtUserLocation() {
-  const map = useMap();
-  map.locate().on("locationfound", (e) => {
-    map.setView(e.latlng, 12);
-  });
-}
-
-function AddMarkerToClick({ setHideModal, setResults }) {
+function AddMarkerToClick({ setHideModal, setResults, page, setPage }) {
   const [marker, setMarker] = useState({ lat: 0, lng: 0 });
-
   const map = useMapEvents({
     async click(e) {
       const newMarker = e.latlng;
       setMarker(newMarker);
-      const fetchedResults = await getResults(e.latlng.lat, e.latlng.lng);
+      const fetchedResults = await getResults(e.latlng.lat, e.latlng.lng, page);
       setResults(fetchedResults.businesses);
       setHideModal(false);
     },
   });
 
-  async function getResults(lat, lon) {
+  async function getResults(lat, lon, page) {
     const response = await fetch(
-      `/api/location?latitude=${lat}&longitude=${lon}`
+      `/api/location?latitude=${lat}&longitude=${lon}&page=${page}`
     );
     const data = await response.json();
     return data;
@@ -56,6 +50,7 @@ function AddMarkerToClick({ setHideModal, setResults }) {
 
   useEffect(() => {
     map.setView([marker.lat, marker.lng]);
+    setPage(1);
   }, [marker]);
 
   return (
@@ -74,6 +69,16 @@ export default function Map() {
   const [hideModal, setHideModal] = useState(true);
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [results, setResults] = useState([]);
+  const [page, setPage] = useState(1);
+
+  async function getResults(lat, lon, page) {
+    const response = await fetch(
+      `/api/location?latitude=${lat}&longitude=${lon}&page=${page}`
+    );
+    const data = await response.json();
+    return data;
+  }
+
   const notify = () =>
     toast(
       <>
@@ -98,6 +103,14 @@ export default function Map() {
     });
   }, []);
 
+  useEffect(() => {
+    const genResults = async () => {
+      const fetchedResults = await getResults(center.lat, center.lng, page);
+      setResults(fetchedResults.businesses);
+    };
+    genResults().then();
+  }, [page]);
+
   return (
     gotLocation && (
       <>
@@ -109,6 +122,8 @@ export default function Map() {
           <AddMarkerToClick
             setHideModal={setHideModal}
             setResults={setResults}
+            page={page}
+            setPage={setPage}
           />
           {results.map((result, index) => (
             <Marker
@@ -149,14 +164,46 @@ export default function Map() {
               </h1>
             </Col>
           </Row>
-          {results.map((result, index) => (
-            <Result
-              key={index}
-              count={index + 1}
-              result={result}
-              notify={notify}
-            />
-          ))}
+          <div style={{ minHeight: "59vh" }}>
+            {results.map((result, index) => (
+              <Result
+                key={index}
+                count={index + 1}
+                result={result}
+                notify={notify}
+              />
+            ))}
+            {results.length === 0 ? (
+              <p className="mt-3">Oops! There's nothing here</p>
+            ) : null}
+          </div>
+          <div className={styles.pagination}>
+            <Button
+              variant="none"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <Image
+                src={Left}
+                alt="left"
+                style={{ width: "26px", height: "26px" }}
+              />
+            </Button>
+            <p className="m-2 p-0" style={{ fontSize: "20px" }}>
+              {page}
+            </p>
+            <Button
+              variant="none"
+              disabled={results.length < 10}
+              onClick={() => setPage(page + 1)}
+            >
+              <Image
+                src={Right}
+                alt="right"
+                style={{ width: "26px", height: "26px" }}
+              />
+            </Button>
+          </div>
           <Button variant="none" onClick={(_) => setHideModal(true)}>
             <Image
               src={exitX}
