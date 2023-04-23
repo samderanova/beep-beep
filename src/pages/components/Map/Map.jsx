@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,7 +9,6 @@ import {
   TileLayer,
   Marker,
   Popup,
-  useMap,
   useMapEvents,
 } from "react-leaflet";
 import * as L from "leaflet";
@@ -33,6 +32,8 @@ async function getResults(lat, lon) {
 
 function AddMarkerToClick({ setHideModal, setResults, page, setPage, lati = 0, long = 0 }) {
   const [marker, setMarker] = useState({ lat: lati, lng: long });
+  let popupRef = useRef();
+
   const map = useMapEvents({
     async click(e) {
       const newMarker = e.latlng;
@@ -41,6 +42,10 @@ function AddMarkerToClick({ setHideModal, setResults, page, setPage, lati = 0, l
       setResults(fetchedResults.businesses);
       setHideModal(false);
     },
+  });
+
+  useEffect(() => {
+    popupRef.current.openPopup();
   });
 
   useEffect(() => {
@@ -63,7 +68,7 @@ function AddMarkerToClick({ setHideModal, setResults, page, setPage, lati = 0, l
 
   return (
     <>
-      <Marker position={marker}>
+      <Marker ref={popupRef} position={marker}>
         <Popup>
           ({Number(marker.lat).toFixed(2)}, {Number(marker.lng).toFixed(2)})
         </Popup>
@@ -244,11 +249,14 @@ export default function Map() {
           className={styles.results + " p-5"}
           style={hideModal ? { display: "none" } : null}
         >
-          <Row>
+          <Row className="align-items-center">
             <Col>
               <h1>
                 <strong>Results</strong>
               </h1>
+            </Col>
+            <Col className="text-end">
+              <Link href="/schedule">View Schedule</Link>
             </Col>
           </Row>
           <div style={{ minHeight: "59vh" }}>

@@ -1,3 +1,4 @@
+import Head from "next/head";
 import dynamic from "next/dynamic";
 
 export default function Search() {
@@ -5,5 +6,10 @@ export default function Search() {
     ssr: false,
   });
 
-  return <Map />;
+  return <>
+    <Head>
+      <title>Search | Beep Beep I'm Going Places</title>
+    </Head>
+    <Map />
+  </>;
 }

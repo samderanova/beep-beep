@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { use, useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { Col, Container, Row, Card } from "react-bootstrap";
@@ -146,6 +147,9 @@ export default function Schedule() {
 
   return (
     <Container fluid className={styles.calendar + " p-5"}>
+      <Head>
+        <title>Schedule | Beep Beep I'm Going Places</title>
+      </Head>
       <Row>
         <Col>
           <FullCalendar
