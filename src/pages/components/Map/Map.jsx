@@ -57,6 +57,8 @@ function AddMarkerToClick({ setHideModal, setResults, page, setPage, lati = 0, l
   useEffect(() => {
     map.setView([lati, long]);
     setMarker({ lat: lati, lng: long });
+    getResults(lati, long, page).then((response) => setResults(response.businesses));
+    setHideModal(false);
   }, [lati, long]);
 
   return (
@@ -259,7 +261,7 @@ export default function Map() {
               />
             ))}
             {results.length === 0 ? (
-              <p className="mt-3">Oops! There's nothing here</p>
+              <p className="mt-3">Oops! There&apos;s nothing here</p>
             ) : null}
           </div>
           <div className={styles.pagination}>

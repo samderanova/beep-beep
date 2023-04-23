@@ -16,7 +16,7 @@ export default function Landing() {
     <div className={styles.landing}>
       <div className={styles.card}>
         <div className={styles.heading}>
-          <h1>BeepBeepI'mGoingPlaces</h1>
+          <h1>BeepBeepI&apos;mGoingPlaces</h1>
         </div>
         <Image src={Jeep} width={100} alt="Jeep" />
         <Button
