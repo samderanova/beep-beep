@@ -23,8 +23,16 @@ import Result from "./Result/Result";
 import styles from "./Map.module.scss";
 import search from "@/pages/search";
 
-function AddMarkerToClick({ setHideModal, setResults, page, setPage }) {
-  const [marker, setMarker] = useState({ lat: 0, lng: 0 });
+async function getResults(lat, lon) {
+  const response = await fetch(
+    `/api/location?latitude=${lat}&longitude=${lon}`
+  );
+  const data = await response.json();
+  return data;
+}
+
+function AddMarkerToClick({ setHideModal, setResults, page, setPage, lati = 0, long = 0 }) {
+  const [marker, setMarker] = useState({ lat: lati, lng: long });
   const map = useMapEvents({
     async click(e) {
       const newMarker = e.latlng;
@@ -34,14 +42,6 @@ function AddMarkerToClick({ setHideModal, setResults, page, setPage }) {
       setHideModal(false);
     },
   });
-
-  async function getResults(lat, lon, page) {
-    const response = await fetch(
-      `/api/location?latitude=${lat}&longitude=${lon}&page=${page}`
-    );
-    const data = await response.json();
-    return data;
-  }
 
   useEffect(() => {
     map.locate().on("locationfound", async (e) => {
@@ -54,11 +54,16 @@ function AddMarkerToClick({ setHideModal, setResults, page, setPage }) {
     setPage(1);
   }, [marker]);
 
+  useEffect(() => {
+    map.setView([lati, long]);
+    setMarker({ lat: lati, lng: long });
+  }, [lati, long]);
+
   return (
     <>
       <Marker position={marker}>
         <Popup>
-          ({marker.lat.toFixed(2)}, {marker.lng.toFixed(2)})
+          ({Number(marker.lat).toFixed(2)}, {Number(marker.lng).toFixed(2)})
         </Popup>
       </Marker>
     </>
@@ -70,6 +75,10 @@ export default function Map() {
   const [hideModal, setHideModal] = useState(true);
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [results, setResults] = useState([]);
+  const [latitude, setLatitude] = useState([]);
+  const [currLat, setCurrLat] = useState(0);
+  const [longitude, setLongitude] = useState([]);
+  const [currLon, setCurrLon] = useState(0);
   const [page, setPage] = useState(1);
 
   async function getResults(lat, lon, page) {
@@ -100,15 +109,16 @@ export default function Map() {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
       });
+      setCurrLat(position.coords.latitude);
+      setCurrLon(position.coords.longitude);
       setGotLocation(true);
     });
   }, []);
 
   const [searchEntry, setSearchEntry] = useState("");
-  const [latitude, setLatitude] = useState([]);
-  const [longitude, setLongitude] = useState([]);
   const [locations, setLocations] = useState([]);
   const [success, setSuccess] = useState(true);
+  const [l, setL] = useState(0);
 
   async function submitSearchEntry(e) {
     e.preventDefault();
@@ -137,6 +147,7 @@ export default function Map() {
       if (l > 5) {
         l = 5;
       }
+      setL(l);
       // send max 5 locations
       for (let i = 0; i < l; i++) {
         const elipses = false;
@@ -150,11 +161,15 @@ export default function Map() {
         lats.push(searchResult[i].lat);
         lons.push(searchResult[i].lon);
       }
-
       setLocations(locations);
-
-      console.log("locs", locations);
+      setLatitude(lats);
+      setLongitude(lons);
     }
+  }
+
+  function updateLatLon(lat, lon) {
+    setCurrLat(lat);
+    setCurrLon(lon);
   }
 
   useEffect(() => {
@@ -176,6 +191,8 @@ export default function Map() {
           <AddMarkerToClick
             setHideModal={setHideModal}
             setResults={setResults}
+            lati={currLat}
+            long={currLon}
             page={page}
             setPage={setPage}
           />
@@ -211,7 +228,11 @@ export default function Map() {
           <div>
             {success ? null : "Error: Please enter valid location."}
             {locations.map((loc, i) => (
-              <p key={i} id={`loc${i}`}>
+              <p
+                key={i}
+                id={`loc${i}`}
+                onClick={(e) => updateLatLon(latitude[i], longitude[i])}
+              >
                 {loc}
               </p>
             ))}

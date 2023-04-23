@@ -7,21 +7,26 @@
   p {
     text-decoration: none;
     color: black;
-    border: rgba(224, 224, 224, 0.297);
+    border: rgba(240, 236, 236, 0.297);
     border-bottom: 0.01rem;
     border-top: hidden;
     border-style: solid;
+    //border-width: 0.2rem;
     z-index: 100;
     padding: 0.15rem;
     margin: 0;
-  }
-
-  transition: background-color 0.2s ease;
-
-  &:hover {
     background-color: #eee;
+
     transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgb(195, 192, 192);
+      transition: background-color 0.2s ease;
+    }
+
   }
+
+  
 }
 
 .results {
