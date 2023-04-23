@@ -19,6 +19,7 @@ import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import exitX from "@/assets/icons/x-lg.svg";
 import Result from "./Result/Result";
 import styles from "./Map.module.scss";
+import search from "@/pages/search";
 
 function CenterAtUserLocation() {
   const map = useMap();
@@ -47,6 +48,7 @@ function AddMarkerToClick({ setHideModal, setResults }) {
     const data = await response.json();
     return data;
   }
+    
 
   useEffect(() => {
     map.locate().on("locationfound", async (e) => {
@@ -98,6 +100,59 @@ export default function Map() {
     });
   }, []);
 
+  const [searchEntry, setSearchEntry] = useState("");
+  const [latitude, setLatitude] = useState([]);
+  const [longitude, setLongitude] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [success, setSuccess] = useState(true);
+
+  async function submitSearchEntry(e) {
+    e.preventDefault();
+   try {
+    setSearchEntry(e.target.value);
+    const response = await fetch(
+      `https://geocode.maps.co/search?q=${e.target.value}`
+    );
+      const data = await response.json();
+      showSearch(data);
+   } catch {
+    setSuccess(false);
+   }
+  }
+
+  async function showSearch(searchResult) {
+    const locations = [];
+    const lats = [];
+    const lons = [];
+    let l = 0;
+
+    if (searchResult.length > 0) {
+      setSuccess(true);
+      l = searchResult.length;
+      
+      if (l > 5) {
+        l = 5;
+      }
+      // send max 5 locations
+      for (let i = 0; i < l; i++) {
+        const elipses = false;
+        let s = searchResult[i].display_name;
+        if (s.length > 50) {
+          s = s.substring(0, 50);
+          s = s + "..."
+        }
+
+        locations.push(s);
+        lats.push(searchResult[i].lat);
+        lons.push(searchResult[i].lon);
+      }
+
+      setLocations(locations);
+
+      console.log("locs", locations);
+    }
+  }
+
   return (
     gotLocation && (
       <>
@@ -136,7 +191,20 @@ export default function Map() {
               boxShadow: "0px 3px 3px gray",
               minWidth: "500px",
             }}
+            value={searchEntry}
+            onChange={(e) => submitSearchEntry(e)}
           />
+          <div>
+            {success ? null : "Error: Please enter valid location."}
+            {locations.map((loc, i) => (
+                <p key={i} id={`loc${i}`}>{loc}</p>
+            ))}
+          </div>
+            
+          
+          
+            
+          
         </div>
         <div
           className={styles.results + " p-5"}
