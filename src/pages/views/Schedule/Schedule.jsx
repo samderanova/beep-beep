@@ -4,20 +4,22 @@ import { Col, Container, Row, Card } from "react-bootstrap";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Button } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import styles from "./Schedule.module.scss";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Schedule() {
   const [eventSelected, setEventSelected] = useState("");
   const [scheduled, setScheduled] = useState([]);
   const [unscheduled, setUnscheduled] = useState([]);
+  const notify = () => toast("Schedule saved!");
   const auth = getAuth();
 
   const handleDateSelect = (selectInfo) => {
-    console.log("handleDateSelect ran");
     // let title = prompt('Please enter a new title for your event')
     let calendarApi = selectInfo.view.calendar;
 
@@ -39,7 +41,6 @@ export default function Schedule() {
           )
         );
         setEventSelected("");
-        console.log(newEvent);
       }
     }
   };
@@ -65,7 +66,6 @@ export default function Schedule() {
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("in useEffect");
         const uid = user.uid;
         const userRef = doc(db, "users", uid);
         const docSnap = await getDoc(userRef);
@@ -80,9 +80,6 @@ export default function Schedule() {
           })
         );
         setUnscheduled(docSnap.data().unscheduled);
-        console.log("use effect done");
-      } else {
-        console.log("Ooga booga i am not logged in");
       }
     });
   }, []);
@@ -106,9 +103,7 @@ export default function Schedule() {
   // };
 
   const setEvents = (events) => {
-    console.log("setEvents run");
     setScheduled(events);
-    console.log(scheduled);
   };
 
   const onSubmit = async () => {
@@ -119,8 +114,7 @@ export default function Schedule() {
         // await updateDoc(userRef, {
         //   scheduled: scheduled,
         // });
-        console.log(unscheduled);
-        console.log(scheduled);
+        notify();
       }
     });
   };
@@ -147,7 +141,6 @@ export default function Schedule() {
       );
     }
 
-    console.log(cards);
     return cards;
   };
 
@@ -184,6 +177,7 @@ export default function Schedule() {
           </div>
         </Col>
       </Row>
+      <ToastContainer position="bottom-right" />
     </Container>
   );
 }
