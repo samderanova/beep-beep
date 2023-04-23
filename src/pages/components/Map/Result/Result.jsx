@@ -26,31 +26,26 @@ export default function Result({ count, result, notify, setToastContent }) {
   async function updateLocation() {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const docSnap = await getDoc(userRef);
+    const data = docSnap.data();
+    let newData;
     if (added) {
-      if (docSnap.data().scheduled.includes(result.id)) {
-        let data = docSnap.data().scheduled;
-        const index = data.indexOf(result.id);
-        data = data.splice(index, 1);
-        await updateDoc(userRef, {
-          scheduled: data,
-        });
+      if (data.scheduled.includes(result.id)) {
+        newData = data.scheduled.filter(
+          (_, index) => index != data.scheduled.indexOf(result.id)
+        );
+        await updateDoc(userRef, { scheduled: newData });
       } else {
-        let data = docSnap.data().unscheduled;
-        const index = data.indexOf(result.id);
-        data = data.splice(index, 1);
-        await updateDoc(userRef, {
-          unscheduled: data,
-        });
+        newData = data.unscheduled.filter(
+          (_, index) => index != data.unscheduled.indexOf(result.id)
+        );
+        await updateDoc(userRef, { unscheduled: newData });
       }
-      setToastContent("Successfully added location!");
     } else {
-      const data = docSnap.data().unscheduled;
-      data.push(result.id);
-      await updateDoc(userRef, {
-        unscheduled: data,
-      });
-      setToastContent("Successfully removed location!");
+      newData = data.unscheduled;
+      newData.push(result.id);
+      await updateDoc(userRef, { unscheduled: newData });
     }
+
     setAdded(!added);
     notify();
   }

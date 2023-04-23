@@ -74,11 +74,11 @@ export default function Map() {
   const [hideModal, setHideModal] = useState(true);
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [results, setResults] = useState([]);
-  const [toastContent, setToastContent] = useState("");
   const notify = () =>
     toast(
       <>
-        {toastContent} View your schedule <Link href="/schedule">here</Link>.
+        Schedule edited! View your complete schedule{" "}
+        <Link href="/schedule">here</Link>.
       </>
     );
 
@@ -155,7 +155,6 @@ export default function Map() {
               count={index + 1}
               result={result}
               notify={notify}
-              setToastContent={setToastContent}
             />
           ))}
           <Button variant="none" onClick={(_) => setHideModal(true)}>
