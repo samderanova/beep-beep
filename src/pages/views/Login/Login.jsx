@@ -5,9 +5,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { Formik, Field } from "formik";
 import * as yup from "yup";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import styles from "./Login.module.scss";
 
 const EMAIL_REGEX = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
@@ -16,7 +17,7 @@ const initialValues = {
   email: "",
   password: "",
   confirmPassword: "",
-}
+};
 
 const validationSchemaSignUp = yup.object({
   email: yup
@@ -28,9 +29,9 @@ const validationSchemaSignUp = yup.object({
     .required("Please enter your password")
     .min(6, "Password must be at least 6 characters."),
   confirmPassword: yup
-  .string()
-  .required("Please confirm your password")
-  .oneOf([yup.ref("password")], "Sorry, passwords do not match.")
+    .string()
+    .required("Please confirm your password")
+    .oneOf([yup.ref("password")], "Sorry, passwords do not match."),
 });
 
 const validationSchemaLogin = yup.object({
@@ -38,10 +39,8 @@ const validationSchemaLogin = yup.object({
     .string()
     .required("Please enter your email")
     .matches(EMAIL_REGEX, "Sorry, the email address is not valid."),
-  password: yup
-    .string()
-    .required("Please enter your password"),
-  confirmPassword: yup.string().notRequired()
+  password: yup.string().required("Please enter your password"),
+  confirmPassword: yup.string().notRequired(),
 });
 
 export default function Login() {
@@ -50,7 +49,9 @@ export default function Login() {
   const [successLogin, setSuccessLogin] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const validationSchema = isSignUp ? validationSchemaSignUp : validationSchemaLogin;
+  const validationSchema = isSignUp
+    ? validationSchemaSignUp
+    : validationSchemaLogin;
 
   const handleLogin = (values, { setSubmitting }) => {
     setSuccessLogin(true);
@@ -60,26 +61,30 @@ export default function Login() {
           router.push("/search");
         })
         .catch((_) => {
-          setErrorMessage("Invalid email or password. Please try again.")
+          setErrorMessage("Invalid email or password. Please try again.");
           setSubmitting(false);
           setSuccessLogin(false);
         });
     } else {
       createUserWithEmailAndPassword(auth, values.email, values.password)
         .then((_) => {
+          const dbRef = doc(db, "users", auth.currentUser.uid);
+          setDoc(dbRef, { unscheduled: [], scheduled: [] });
           router.push("/search");
         })
         .catch((_) => {
-          setErrorMessage("Email is already in use.")
+          setErrorMessage("Email is already in use.");
           setSubmitting(false);
           setSuccessLogin(false);
         });
     }
-  }
-  
+  };
+
   return (
     <div className={styles.login}>
-      <h1>{successLogin ? "YES CHEF" : (isSignUp ? "Create Account" : "Login")}</h1>
+      <h1>
+        {successLogin ? "YES CHEF" : isSignUp ? "Create Account" : "Login"}
+      </h1>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -91,10 +96,12 @@ export default function Login() {
           isSubmitting,
           handleSubmit,
           setValues,
-          setTouched
+          setTouched,
         }) => (
           <Form className={styles.form} onSubmit={handleSubmit}>
-            {errorMessage === "" ? null : <Alert variant="danger">{errorMessage}</Alert>}
+            {errorMessage === "" ? null : (
+              <Alert variant="danger">{errorMessage}</Alert>
+            )}
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
               <Field
@@ -144,14 +151,14 @@ export default function Login() {
                 className="p-0 border-0"
                 variant="none"
                 onClick={(_) => {
-                  setIsSignUp(!isSignUp); 
-                  setErrorMessage(""); 
+                  setIsSignUp(!isSignUp);
+                  setErrorMessage("");
                   setValues(initialValues);
                   setTouched({
                     email: false,
                     password: false,
                     confirmPassword: false,
-                  })
+                  });
                 }}
               >
                 <Form.Text>{!isSignUp ? "Create Account" : "Login"}</Form.Text>
